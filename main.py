@@ -20,59 +20,48 @@ async def request(url: str):
             raise HttpError(f"Error status: {r.status_code} for {url}")
 
 
-# async def get_date_async(input_day):
-#     await asyncio.sleep(0.5)
-#     # get_date, = list(filter(lambda user: user["id"] == uid, fake_users))
-#     get_date_list = [(datetime.now() - timedelta(days=index-1)) for index in range(1, input_day + 1)]
-#     get_date = [get_date.strftime("%d.%m.%Y") for get_date in get_date_list]
-#     print(get_date)
-#     # return get_date
-
-
 # def normalize_response(response):
 #     result_list = list()
 #     return result_list
 
 def get_date(input_day):
     result_list = [(datetime.now() - timedelta(days=index-1)) for index in range(1, input_day + 1)]
-    # print(result_list)
     for index in range(len(result_list)):
         result_list[index] = result_list[index].strftime("%d.%m.%Y")
     return result_list
 
 # async def get_date_async(dates_list):
 #     await asyncio.sleep(0.5)
-#     # for i in map(lambda x: x.strftime("%d.%m.%Y"), dates_list):
-#     #     print(i)
-#     # r = []
-#     # for i in range(input_day + 1):
-#     #     r.append(get_user_async(i))
-#     # return await asyncio.gather(*r)
-#     cur_date, = list(map(lambda x: x.strftime("%d.%m.%Y"), dates_list))
+#     cur_date, = list(lambda x: x, dates_list)
 #     return cur_date
+
+# async def get_request(input_day):
+#     r = []
+#     for i in range(input_day + 1):
+#         # response = await request(f'https://api.privatbank.ua/p24api/exchange_rates?date={cur_date}')
+#         r.append(get_date_async(i))
+#     return await asyncio.gather(*r)
+
 
 async def main(index_day):
     res_exchange_list = list()
     dates_list = get_date(index_day)
     print(dates_list)
-    # cur_date = await get_date_async(dates_list)
-    # for i in range(index_day + 1):
-    #     res_exchange_list.append(get_date_async(dates_list))
-    # return await asyncio.gather(*res_exchange_list)
-    # try:
-    #     # for idx in range(index_day + 1):
-    #     for cur_date in dates_list:
-    #         # cur_date = await get_date_async(idx)
-    #         response = await request(f'https://api.privatbank.ua/p24api/exchange_rates?date={cur_date}')
-    #         res_exchange_list.append(response)
-    #     # result_r = normalize_response(res_exchange_list)
-    #     # return res_exchange_list
-    #     return await asyncio.gather(*res_exchange_list)
-    #     # return response
-    # except HttpError as err:
-    #     print(err)
-    #     return None
-    return res_exchange_list
+    try:
+        # for idx in range(index_day + 1):
+        for cur_date in dates_list:
+            print(type(cur_date), cur_date)
+            # cur_date = await get_date_async(dates_list)
+            # response = await request(f'https://api.privatbank.ua/p24api/exchange_rates?date={cur_date}')
+            # res_exchange_list.append(response)
+        # result_r = normalize_response(res_exchange_list)
+        return res_exchange_list
+        # return await asyncio.gather(*res_exchange_list)
+        # return response
+    except HttpError as err:
+        print(err)
+        return None
+    # return res_exchange_list
     # return cur_date
 
 
