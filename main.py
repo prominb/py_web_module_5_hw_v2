@@ -5,14 +5,19 @@ import httpx
 import asyncio
 import platform
 
+API_URL = 'https://api.privatbank.ua/p24api/exchange_rates?date='
+
 
 class HttpError(Exception):
     pass
 
 
 async def request(url: str):
+    """Виконує асинхронний GET-запит до вказаного URL-адреси і повертає результат у форматі JSON."""
+    timeout = httpx.Timeout(2.0, read=None) # Встановлюється таймаут для запиту. У цьому випадку таймаут встановлено
+    # на 2 секунди.
     async with httpx.AsyncClient() as client:
-        r = await client.get(url)
+        r = await client.get(url, timeout=timeout)
         if r.status_code == 200:
             result = r.json()
             return result
@@ -20,60 +25,55 @@ async def request(url: str):
             raise HttpError(f"Error status: {r.status_code} for {url}")
 
 
-# def normalize_response(response):
-#     result_list = list()
-#     return result_list
-
-def get_date(input_day):
-    result_list = [(datetime.now() - timedelta(days=index-1)).strftime("%d.%m.%Y") for index in range(1, input_day + 1)]
-    print(result_list)
+async def get_date(input_day: int) -> list[str]:
+    result_list = [(datetime.now() - timedelta(days=index - 1)).strftime("%d.%m.%Y") for index in
+                   range(1, input_day + 1)]
     return result_list
 
-# async def get_date_async(dates_list):
-#     await asyncio.sleep(0.5)
-#     cur_date, = list(lambda x: x, dates_list)
-#     return cur_date
 
-# async def get_request(input_day):
-#     r = []
-#     for i in range(input_day + 1):
-#         r.append(get_date_async(i))
-#     return await asyncio.gather(*r)
-
-
-async def main(index_day):
-    res_exchange_list = list()
-    dates_list = get_date(index_day)
-    # print(dates_list)
-    try:
-        # for idx in range(index_day + 1):
-        for cur_date in dates_list:
-            # print(type(cur_date), cur_date)
-            # cur_date = await get_date_async(dates_list)
-            response = await request(f'https://api.privatbank.ua/p24api/exchange_rates?date={cur_date}')
-            print(response)
-            # res_exchange_list.append(response)
-        # result_r = normalize_response(res_exchange_list)
-        return res_exchange_list
-        # return await asyncio.gather(*res_exchange_list)
-        # return response
-    except HttpError as err:
-        print(err)
-        return None
-    # return res_exchange_list
-    # return cur_date
+async def get_data(dates_list: list):
+    """Виконує асинхронне отримання даних з вказаних URL-адрес за допомогою списку дат."""
+    exchange_rate_data = [request(f'{API_URL}{date}') for date in dates_list]
+    results = await asyncio.gather(*exchange_rate_data)
+    result_list = list()
+    for r in results:
+        # print(type(r), r)
+        result = await normalize_response(r)
+        print(result)
 
 
-if __name__ == '__main__':
-    if platform.system() == 'Windows':
-        asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
+async def normalize_response(response: dict):
+    res_dict = dict()
+    res_dict_inner = dict()
+    cur_date = response.get('date')
+    exchange_rate = response.get('exchangeRate')
+    for i in exchange_rate:
+        if i['currency'] == 'EUR':
+            res_dict_inner.update({i['currency'] : {'sale': i['saleRateNB'], 'purchase': i['purchaseRateNB']}})
+        elif i['currency'] == 'USD':
+            res_dict_inner.update({i['currency'] : {'sale': i['saleRateNB'], 'purchase': i['purchaseRateNB']}})
+        res_dict[cur_date] = res_dict_inner
+    return res_dict
+
+
+async def main():
+    """основна функція в якій реалізована логіка """
     if len(sys.argv) < 2:
         sys.exit("You need enter Days.")
     get_argv = int(sys.argv[1])
     if get_argv > 10:
         sys.exit(f"Days {get_argv} more then 10.")
-    result = asyncio.run(main(get_argv))
-    print(result)
-    # for exchange_day in result:
-    #     print(exchange_day)
-    # get_date(get_argv)
+    dates_list = await get_date(get_argv)
+    try:
+        await get_data(dates_list=dates_list)
+    except HttpError as err:
+        print(err)
+        return None
+
+
+if __name__ == '__main__':
+    if platform.system() == 'Windows':
+        asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
+    asyncio.run(main())
+
+
