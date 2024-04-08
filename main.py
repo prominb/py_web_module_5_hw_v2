@@ -37,9 +37,9 @@ async def get_data(dates_list: list):
     results = await asyncio.gather(*exchange_rate_data)
     result_list = list()
     for r in results:
-        # print(type(r), r)
         result = await normalize_response(r)
-        print(result)
+        result_list.append(result)
+    return result_list
 
 
 async def normalize_response(response: dict):
@@ -65,7 +65,8 @@ async def main():
         sys.exit(f"Days {get_argv} more then 10.")
     dates_list = await get_date(get_argv)
     try:
-        await get_data(dates_list=dates_list)
+        result = await get_data(dates_list=dates_list)
+        print(result)  # Вивід в консоль списку, без трансформації в JSON
     except HttpError as err:
         print(err)
         return None
@@ -75,5 +76,3 @@ if __name__ == '__main__':
     if platform.system() == 'Windows':
         asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
     asyncio.run(main())
-
-
