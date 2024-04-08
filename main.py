@@ -25,9 +25,8 @@ async def request(url: str):
 #     return result_list
 
 def get_date(input_day):
-    result_list = [(datetime.now() - timedelta(days=index-1)) for index in range(1, input_day + 1)]
-    for index in range(len(result_list)):
-        result_list[index] = result_list[index].strftime("%d.%m.%Y")
+    result_list = [(datetime.now() - timedelta(days=index-1)).strftime("%d.%m.%Y") for index in range(1, input_day + 1)]
+    print(result_list)
     return result_list
 
 # async def get_date_async(dates_list):
@@ -38,7 +37,6 @@ def get_date(input_day):
 # async def get_request(input_day):
 #     r = []
 #     for i in range(input_day + 1):
-#         # response = await request(f'https://api.privatbank.ua/p24api/exchange_rates?date={cur_date}')
 #         r.append(get_date_async(i))
 #     return await asyncio.gather(*r)
 
@@ -46,13 +44,14 @@ def get_date(input_day):
 async def main(index_day):
     res_exchange_list = list()
     dates_list = get_date(index_day)
-    print(dates_list)
+    # print(dates_list)
     try:
         # for idx in range(index_day + 1):
         for cur_date in dates_list:
-            print(type(cur_date), cur_date)
+            # print(type(cur_date), cur_date)
             # cur_date = await get_date_async(dates_list)
-            # response = await request(f'https://api.privatbank.ua/p24api/exchange_rates?date={cur_date}')
+            response = await request(f'https://api.privatbank.ua/p24api/exchange_rates?date={cur_date}')
+            print(response)
             # res_exchange_list.append(response)
         # result_r = normalize_response(res_exchange_list)
         return res_exchange_list
